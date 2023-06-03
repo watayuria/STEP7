@@ -1,0 +1,17 @@
+.FormGroup {
+    display: flex;
+}
+
+table {
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th,td {
+    border: solid 1px;
+    /* text-align: center; */
+}
+
+.error {
+    color: red;
+}
