@@ -9,86 +9,62 @@ use App\Http\Requests\ProductRequest;
 
 class ProductController extends Controller
 {
-    public function index() {
-        $products = Product::all();
-        $companies = Company::all();
-        return view('index', compact('products', 'companies'));
-    }
 
-    public function search(Request $request) {
-        $keyword = $request->input('keyword');
-        $company_name = $request->input('company_name');
-        $query = Product::query();
-        $companies = Company::all();
 
-        if (!empty($keyword)) {
-            $query->where('product_name', 'LIKE', "%{$keyword}%");
-        }
+    public function index()
+{
+    $data = Product::getIndexData();
+    return view('index', $data);
+}
 
-        if (!empty($company_name)) {
-            if ($company_name !== 'すべて') {
-                $query->whereHas('company', function ($query) use ($company_name) {
-                    $query->where('company_name', $company_name);
-                });
-            }
-        }
+public function search(Request $request)
+{
+    $keyword = $request->input('keyword');
+    $company_name = $request->input('company_name');
+    $data = Product::getSearchData($keyword, $company_name);
+    return view('index', $data);
+}
 
-        $products = $query->get();
+public function show(Product $product)
+{
+    $data = Product::getProductData($product);
+    return view('products.show', $data);
+}
 
-        return view('index', compact('products', 'companies', 'keyword'));
-    }
+public function create()
+{
+    $data = Product::getCreateData();
+    return view('products.create', $data);
+}
 
-    public function show(Product $product) {
-        return view('products.show', compact('product'));
-    }
+public function edit(Product $product)
+{
+    $data = Product::getEditData($product);
+    return view('products.edit', $data);
+}
 
-    public function create() {
-        $companies = Company::all();
-        return view('products.create', compact('companies'));
-    }
+public function store(ProductRequest $request)
+{
+    $product = Product::storeProduct($request->all());
 
-    public function store(ProductRequest $request) {
-        $product = new Product();
-        $product->product_name = $request->product_name;
-        $company = Company::where('company_name', $request->company_name)->first();
-        if ($company) {
-            $product->company_id = $company->id;
-        }
-        $product->price = $request->price;
-        $product->stock = $request->stock;
-        $product->comment = $request->comment;
-        $product->img_path = $request->img_path;
-        $product->save();
+    return redirect()
+        ->route('products.index');
+}
 
-        return redirect()
-            ->route('products.index');
-    }
+public function update(ProductRequest $request, Product $product)
+{
+    $updatedProduct = $product->updateProduct($request->all());
 
-    public function edit(Product $product) {
-        $companies = Company::all();
-        return view('products.edit', compact('product', 'companies'));
-    }
+    return redirect()
+        ->route('products.show', $updatedProduct);
+}
 
-    public function update(ProductRequest $request, Product $product) {
-        $product->product_name = $request->product_name;
-        $company = Company::where('company_name', $request->company_name)->first();
-        if ($company) {
-            $product->company_id = $company->id;
-        }
-        $product->price = $request->price;
-        $product->stock = $request->stock;
-        $product->comment = $request->comment;
-        $product->img_path = $request->img_path;
-        $product->save();
+public function destroy(Product $product)
+{
+    $product->deleteProduct();
 
-        return redirect()
-            ->route('products.show', $product);
-    }
+    return redirect()
+        ->route('products.index');
+}
 
-    public function destroy(Product $product) {
-        $product->delete();
-
-        return redirect()
-            ->route('products.index');
-    }
 }
